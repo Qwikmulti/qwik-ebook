@@ -55,7 +55,7 @@ export default function Hero() {
       <div style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 24px", maxWidth: "860px", margin: "0 auto" }}>
 
         {/* Floating badge */}
-        <div ref={badgeRef} style={{
+        {/* <div ref={badgeRef} style={{
           display: "inline-flex", alignItems: "center", gap: "8px",
           background: "rgba(245,166,35,0.12)",
           border: "1px solid rgba(245,166,35,0.35)",
@@ -65,7 +65,7 @@ export default function Hero() {
         }}>
           <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#f5a623", display: "inline-block", animation: "pulse 2s infinite" }} />
           <span style={{ color: "#f5a623", fontSize: "13px", fontWeight: 500, letterSpacing: "0.08em", fontFamily: "var(--font-body)" }}>FREE EBOOK — LIMITED TIME</span>
-        </div>
+        </div> */}
 
         {/* Main headline */}
         <h1 ref={headlineRef} style={{
