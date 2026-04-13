@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 import { sendEbookEmail } from "@/lib/email";
+import type { Subscriber, Ebook } from "@/types";
 
 // ── POST /api/admin/subscribers/resend-pending ────────────────────────────
 // Sends the active ebook to all subscribers where email_sent = false
@@ -19,7 +20,7 @@ export async function POST(_req: NextRequest) {
     .eq("is_active", true)
     .order("uploaded_at", { ascending: false })
     .limit(1)
-    .single();
+    .single() as { data: Ebook | null; error: null };
 
   if (!ebook) {
     return NextResponse.json(
@@ -32,7 +33,7 @@ export async function POST(_req: NextRequest) {
   const { data: pending } = await supabase
     .from("subscribers")
     .select("*")
-    .eq("email_sent", false);
+    .eq("email_sent", false) as { data: Subscriber[]; error: null };
 
   if (!pending || pending.length === 0) {
     return NextResponse.json({
@@ -54,15 +55,11 @@ export async function POST(_req: NextRequest) {
       ebookTitle: ebook.title,
     });
 
-    if (result.success) {
+if (result.success) {
       sent++;
-      await supabase
-        .from("subscribers")
+      await (supabase.from("subscribers") as any)
         .update({ email_sent: true, email_sent_at: new Date().toISOString() })
         .eq("id", subscriber.id);
-    } else {
-      failed++;
-      console.error(`[Batch Resend] Failed for ${subscriber.email}:`, result.error);
     }
 
     // Small delay to respect SMTP rate limits

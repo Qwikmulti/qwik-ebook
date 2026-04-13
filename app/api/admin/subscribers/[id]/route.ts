@@ -21,8 +21,6 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 }
 
 // ── POST /api/admin/subscribers/[id]/resend ───────────────────────────────
-// Note: resend is a sub-route — see /api/admin/subscribers/[id]/resend/route.ts
-// This GET returns a single subscriber
 export async function GET(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import DashboardLayout from "@/components/admin/DashboardLayout";
-import type { StatsResponse } from "@/types";
+import type { StatsResponse, Subscriber } from "@/types";
 import { formatDateShort } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {stats?.recentSubscribers?.map((sub, i) => (
+                  {stats?.recentSubscribers?.map((sub: Subscriber, i: number) => (
                     <tr
                       key={sub.id}
                       style={{

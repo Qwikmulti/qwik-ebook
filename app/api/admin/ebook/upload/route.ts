@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase";
+import type { Ebook } from "@/types";
 
 // ── POST /api/admin/ebook/upload ──────────────────────────────────────────
 export async function POST(req: NextRequest) {
@@ -48,11 +49,10 @@ export async function POST(req: NextRequest) {
     const publicUrl = urlData.publicUrl;
 
     // Deactivate all previous ebooks
-    await supabase.from("ebooks").update({ is_active: false }).eq("is_active", true);
+    await (supabase.from("ebooks") as any).update({ is_active: false }).eq("is_active", true);
 
     // Insert new ebook record as active
-    const { data: ebook, error: insertError } = await supabase
-      .from("ebooks")
+    const { data: ebook, error: insertError } = await (supabase.from("ebooks") as any)
       .insert({
         title,
         file_url: publicUrl,
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Ebook uploaded and set as active.",
-      data: ebook,
+      data: ebook as Ebook,
     });
   } catch (err) {
     console.error("[Ebook Upload] Unexpected error:", err);

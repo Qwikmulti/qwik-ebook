@@ -43,6 +43,7 @@ export interface StatsResponse {
   emailsSent: number;
   emailsPending: number;
   activeEbook: Ebook | null;
+  recentSubscribers: Subscriber[];
 }
 
 // ─── Form Types ────────────────────────────────────────────────────────────
@@ -64,22 +65,22 @@ export interface EbookUploadFormData {
 
 // ─── Supabase Database Schema Type ────────────────────────────────────────
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       subscribers: {
         Row: Subscriber;
         Insert: Omit<Subscriber, "id" | "created_at" | "email_sent" | "email_sent_at">;
-        Update: Partial<Omit<Subscriber, "id">>;
+        Update: Partial<Omit<Subscriber, "id" | "created_at">>;
       };
       ebooks: {
         Row: Ebook;
         Insert: Omit<Ebook, "id" | "uploaded_at">;
-        Update: Partial<Omit<Ebook, "id">>;
+        Update: Partial<Omit<Ebook, "id" | "uploaded_at">>;
       };
     };
   };
-}
+};
 
 // ─── Component Prop Types ─────────────────────────────────────────────────
 

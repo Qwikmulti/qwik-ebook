@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 import { sendEbookEmail } from "@/lib/email";
+import type { Subscriber, Ebook } from "@/types";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,7 +20,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     .from("subscribers")
     .select("*")
     .eq("id", id)
-    .single();
+    .single() as { data: Subscriber | null; error: null };
 
   if (subError || !subscriber) {
     return NextResponse.json({ error: "Subscriber not found." }, { status: 404 });
@@ -32,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     .eq("is_active", true)
     .order("uploaded_at", { ascending: false })
     .limit(1)
-    .single();
+    .single() as { data: Ebook | null; error: null };
 
   if (!ebook) {
     return NextResponse.json(
@@ -57,8 +58,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
   }
 
   // Update subscriber record
-  await supabase
-    .from("subscribers")
+  await (supabase.from("subscribers") as any)
     .update({ email_sent: true, email_sent_at: new Date().toISOString() })
     .eq("id", id);
 

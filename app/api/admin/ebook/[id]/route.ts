@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase";
+import type { Ebook } from "@/types";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,18 +15,17 @@ export async function PATCH(_req: NextRequest, { params }: Params) {
   const supabase = createSupabaseAdminClient();
 
   // Deactivate all
-  await supabase.from("ebooks").update({ is_active: false }).eq("is_active", true);
+  await (supabase.from("ebooks") as any).update({ is_active: false }).eq("is_active", true);
 
   // Activate selected
-  const { data, error } = await supabase
-    .from("ebooks")
+  const { data, error } = await (supabase.from("ebooks") as any)
     .update({ is_active: true })
     .eq("id", id)
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data });
+  return NextResponse.json({ success: true, data: data as Ebook });
 }
 
 // ── DELETE /api/admin/ebook/[id] — remove ebook ───────────────────────────
@@ -41,7 +41,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     .from("ebooks")
     .select("file_url, file_name")
     .eq("id", id)
-    .single();
+    .single() as { data: Pick<Ebook, "file_url" | "file_name"> | null; error: null };
 
   if (ebook?.file_url) {
     // Extract storage path from URL

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 import { sendEbookEmail } from "@/lib/email";
 import { subscribeSchema } from "@/lib/validations";
+import type { Subscriber, Ebook } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
       .from("subscribers")
       .select("id, email_sent")
       .eq("email", email)
-      .single();
+      .single() as { data: Pick<Subscriber, "id" | "email_sent"> | null; error: null };
 
     if (existing) {
       // Already registered — resend if email wasn't sent yet
@@ -38,9 +39,9 @@ export async function POST(req: NextRequest) {
     // ── 3. Insert new subscriber ──────────────────────────────────────────
     const { data: subscriber, error: insertError } = await supabase
       .from("subscribers")
-      .insert({ name, email })
+      .insert({ name, email } as any)
       .select()
-      .single();
+      .single() as { data: Subscriber; error: null };
 
     if (insertError || !subscriber) {
       console.error("[Subscribe] Insert error:", insertError);
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
       .eq("is_active", true)
       .order("uploaded_at", { ascending: false })
       .limit(1)
-      .single();
+      .single() as { data: Ebook | null; error: null };
 
     // ── 5. Send email ─────────────────────────────────────────────────────
     let emailSent = false;
@@ -73,8 +74,7 @@ export async function POST(req: NextRequest) {
       if (result.success) {
         emailSent = true;
         // Update subscriber record
-        await supabase
-          .from("subscribers")
+        await (supabase.from("subscribers") as any)
           .update({ email_sent: true, email_sent_at: new Date().toISOString() })
           .eq("id", subscriber.id);
       } else {
@@ -119,7 +119,7 @@ async function resendEbook(
     .eq("is_active", true)
     .order("uploaded_at", { ascending: false })
     .limit(1)
-    .single();
+    .single() as { data: Ebook | null; error: null };
 
   if (!ebook) return;
 
@@ -131,8 +131,7 @@ async function resendEbook(
   });
 
   if (result.success) {
-    await supabase
-      .from("subscribers")
+    await (supabase.from("subscribers") as any)
       .update({ email_sent: true, email_sent_at: new Date().toISOString() })
       .eq("id", subscriberId);
   }
