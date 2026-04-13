@@ -60,7 +60,7 @@ export default function GlobalError({
             cursor: "pointer", fontFamily: "inherit",
           }}
         >
-          Go Home
+          Go Back Home
         </button>
       </div>
     </div>
