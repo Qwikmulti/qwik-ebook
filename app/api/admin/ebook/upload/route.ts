@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 import type { Ebook } from "@/types";
 
-// ── POST /api/admin/ebook/upload ──────────────────────────────────────────
+// ── POST /api/admin/ebook/upload
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -31,17 +31,23 @@ export async function POST(req: NextRequest) {
     const storagePath = `${timestamp}_${safeName}`;
 
     // Upload to Supabase Storage
-    const fileBuffer = await file.arrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
+    const fileBuffer = Buffer.from(arrayBuffer);
+    
     const { error: uploadError } = await supabase.storage
       .from("ebooks")
       .upload(storagePath, fileBuffer, {
         contentType: "application/pdf",
         upsert: false,
       });
-
+    
     if (uploadError) {
-      console.error("[Ebook Upload] Storage error:", uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      console.error("[Ebook Upload] Storage error:", {
+        message: uploadError.message,
+        name: uploadError.name,
+        stack: (uploadError as any).stack
+      });
+      return NextResponse.json({ error: `Storage error: ${uploadError.message}` }, { status: 500 });
     }
 
     // Get public URL
@@ -78,7 +84,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── GET /api/admin/ebook/upload — fetch all ebooks ────────────────────────
+// ── GET /api/admin/ebook/upload — fetch all ebooks
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

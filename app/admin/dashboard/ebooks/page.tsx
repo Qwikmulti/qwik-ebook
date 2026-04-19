@@ -16,6 +16,7 @@ export default function EbooksPage() {
   const [title, setTitle] = useState("");
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sendingId, setSendingId] = useState<{ id: string, scope: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchEbooks = useCallback(async () => {
@@ -122,6 +123,30 @@ export default function EbooksPage() {
       toast.error("Delete failed");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleBulkSend = async (id: string, title: string, scope: "pending" | "all") => {
+    const scopeLabel = scope === "pending" ? "pending subscribers" : "ALL subscribers";
+    if (!confirm(`Send "${title}" to ${scopeLabel}?`)) return;
+
+    setSendingId({ id, scope });
+    try {
+      const res = await fetch("/api/admin/subscribers/resend-pending", {
+        method: "POST",
+        body: JSON.stringify({ ebook_id: id, scope }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(json.message);
+      } else {
+        toast.error(json.error || "Failed to send ebooks");
+      }
+    } catch {
+      toast.error("An error occurred while sending");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -313,6 +338,22 @@ export default function EbooksPage() {
                               {activatingId === eb.id ? "..." : "Set Active"}
                             </button>
                           )}
+                          <button
+                            onClick={() => handleBulkSend(eb.id, eb.title, "pending")}
+                            disabled={sendingId !== null}
+                            style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: "6px", padding: "5px 11px", color: "#a855f7", fontSize: "12px", cursor: "pointer", fontFamily: "var(--font-body)", opacity: sendingId !== null ? 0.5 : 1 }}
+                            title="Send to users who haven't received an ebook yet"
+                          >
+                            {sendingId?.id === eb.id && sendingId.scope === "pending" ? "..." : "Send to Pending"}
+                          </button>
+                          <button
+                            onClick={() => handleBulkSend(eb.id, eb.title, "all")}
+                            disabled={sendingId !== null}
+                            style={{ background: "rgba(236,72,153,0.1)", border: "1px solid rgba(236,72,153,0.2)", borderRadius: "6px", padding: "5px 11px", color: "#ec4899", fontSize: "12px", cursor: "pointer", fontFamily: "var(--font-body)", opacity: sendingId !== null ? 0.5 : 1 }}
+                            title="Send to every single subscriber"
+                          >
+                            {sendingId?.id === eb.id && sendingId.scope === "all" ? "..." : "Send to All"}
+                          </button>
                           <button
                             onClick={() => handleDelete(eb.id, eb.title)}
                             disabled={deletingId === eb.id}

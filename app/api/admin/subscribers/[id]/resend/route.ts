@@ -13,6 +13,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  const body = await _req.json().catch(() => ({}));
+  const { ebook_id } = body;
+
   const supabase = createSupabaseAdminClient();
 
   // Fetch subscriber
@@ -26,18 +29,25 @@ export async function POST(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Subscriber not found." }, { status: 404 });
   }
 
-  // Fetch active ebook
-  const { data: ebook } = await supabase
-    .from("ebooks")
-    .select("*")
-    .eq("is_active", true)
-    .order("uploaded_at", { ascending: false })
-    .limit(1)
-    .single() as { data: Ebook | null; error: null };
+  // Fetch ebook (either specific OR active)
+  let ebook: Ebook | null = null;
+  if (ebook_id) {
+    const { data } = await supabase.from("ebooks").select("*").eq("id", ebook_id).single();
+    ebook = data as Ebook | null;
+  } else {
+    const { data } = await supabase
+      .from("ebooks")
+      .select("*")
+      .eq("is_active", true)
+      .order("uploaded_at", { ascending: false })
+      .limit(1)
+      .single();
+    ebook = data as Ebook | null;
+  }
 
   if (!ebook) {
     return NextResponse.json(
-      { error: "No active ebook found. Please upload an ebook first." },
+      { error: "Ebook not found. Please select a valid ebook or set an active one." },
       { status: 404 }
     );
   }
